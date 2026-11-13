@@ -3,6 +3,8 @@ import Inicio from './pages/Inicio'
 import PerfilClinico from './pages/perfilClinico'
 import Confi from './pages/Confi'
 import Registrarse from './pages/registrarse'
+import Descubrir from './pages/Descubrir'
+import Asistente from './pages/Asistente'
 
 function App() {
   return (
@@ -13,6 +15,8 @@ function App() {
         <Route path="/configuracion" element={<Confi />} />
         <Route path="/Confi.jsx" element={<Confi />} />
         <Route path="/registrarse" element={<Registrarse />} />
+        <Route path="/descubrir" element={<Descubrir />} />
+        <Route path="/asistente" element={<Asistente />} />
         <Route path="*" element={<Inicio />} />
       </Routes>
     </BrowserRouter>
