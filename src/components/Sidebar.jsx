@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import '../assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js'
 import { AVATAR_GRANDE } from '../data/assets.js'
 import { PLATOS } from '../data/favoritos.js'
+import { clearSession, getCurrentUser } from '../services/api.js'
 
 // "to" = página que existe en la app React. Sin "to" = todavía no hay ruta (muestra un aviso).
 const MENU = [
@@ -16,6 +17,9 @@ const MENU = [
 const CIERRA_MENU = { 'data-bs-dismiss': 'offcanvas', 'data-bs-target': '#sidebar' }
 
 export default function Sidebar({ activo, insignia, sorpresaIcono, sorpresaTexto, avisar }) {
+  const usuario = getCurrentUser()
+  const nombreUsuario = [usuario?.nombre, usuario?.apellido].filter(Boolean).join(' ') || 'Usuario'
+
   const sorprender = () => {
     const plato = PLATOS[Math.floor(Math.random() * PLATOS.length)]
     avisar('¡Sorpresa! Hoy te toca: ' + plato.titulo)
@@ -39,7 +43,7 @@ export default function Sidebar({ activo, insignia, sorpresaIcono, sorpresaTexto
           <div className="nd-miniprofile d-flex align-items-center gap-3 p-3">
             <img className="nd-avatar-lg" alt="Valentina Ruiz" src={AVATAR_GRANDE} />
             <div className="min-w-0">
-              <p className="fw-bold mb-0 text-truncate">Valentina Ruiz</p>
+              <p className="fw-bold mb-0 text-truncate">{nombreUsuario}</p>
               {insignia}
             </div>
           </div>
@@ -68,7 +72,7 @@ export default function Sidebar({ activo, insignia, sorpresaIcono, sorpresaTexto
             <i className={`bi ${sorpresaIcono} me-2`}></i>{sorpresaTexto}
           </button>
           <Link className="nd-nav" to="/configuracion" {...CIERRA_MENU}><i className="bi bi-gear" />Ajustes</Link>
-          <Link className="nd-nav text-danger" to="/" {...CIERRA_MENU}><i className="bi bi-box-arrow-right" />Cerrar sesión</Link>
+          <Link className="nd-nav text-danger" to="/" {...CIERRA_MENU} onClick={clearSession}><i className="bi bi-box-arrow-right" />Cerrar sesión</Link>
         </div>
       </div>
     </aside>

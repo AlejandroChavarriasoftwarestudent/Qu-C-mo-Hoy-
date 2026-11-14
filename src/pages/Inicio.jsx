@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import '../CSS/login.css'
+import { apiFetch, saveSession } from '../services/api.js'
 
 const EMAIL_STORAGE_KEY = 'QueComoHoy:email'
 const FOOD_IMAGE_URL =
@@ -14,6 +16,7 @@ function getSavedEmail() {
 }
 
 export default function Inicio() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState(getSavedEmail)
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
@@ -21,16 +24,15 @@ export default function Inicio() {
   const [isLoading, setIsLoading] = useState(false)
   const [wasValidated, setWasValidated] = useState(false)
   const [formAlert, setFormAlert] = useState('')
+  const [formAlertType, setFormAlertType] = useState('danger')
   const [socialToast, setSocialToast] = useState('')
   const formRef = useRef(null)
   const emailRef = useRef(null)
   const rememberRef = useRef(null)
-  const submitTimeoutRef = useRef(null)
   const toastTimeoutRef = useRef(null)
 
   useEffect(() => {
     return () => {
-      window.clearTimeout(submitTimeoutRef.current)
       window.clearTimeout(toastTimeoutRef.current)
     }
   }, [])
@@ -43,7 +45,7 @@ export default function Inicio() {
     }, 2500)
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     setFormAlert('')
 
@@ -55,20 +57,29 @@ export default function Inicio() {
     }
 
     setIsLoading(true)
-    submitTimeoutRef.current = window.setTimeout(() => {
-      try {
-        if (rememberRef.current.checked) {
-          localStorage.setItem(EMAIL_STORAGE_KEY, emailRef.current.value)
-        } else {
-          localStorage.removeItem(EMAIL_STORAGE_KEY)
-        }
-      } catch {
-        // El almacenamiento local puede no estar disponible en algunos navegadores.
+    try {
+      const data = await apiFetch('/api/usuarios/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          identificador: emailRef.current.value,
+          password,
+        }),
+      })
+      saveSession(data, rememberRef.current.checked)
+      if (rememberRef.current.checked) {
+        localStorage.setItem(EMAIL_STORAGE_KEY, emailRef.current.value)
+      } else {
+        localStorage.removeItem(EMAIL_STORAGE_KEY)
       }
-
-      setIsLoading(false)
+      setFormAlertType('success')
       setFormAlert('Sesión iniciada. Cargando tu plan culinario…')
-    }, 1200)
+      navigate('/descubrir')
+    } catch (error) {
+      setFormAlertType('danger')
+      setFormAlert(error.message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -367,7 +378,7 @@ export default function Inicio() {
 
                 {formAlert && (
                   <div
-                    className="alert alert-success py-2 small"
+                    className={`alert alert-${formAlertType} py-2 small`}
                     role="status"
                   >
                     {formAlert}
@@ -402,10 +413,10 @@ export default function Inicio() {
                   Crea tu cuenta gratis para calibrar tus alergias,
                   restricciones clínicas y presupuestos culinarios.
                 </p>
-                <a href="#" className="btn sh-btn-outline w-100">
+                <Link to="/registrarse" className="btn sh-btn-outline w-100">
                   <i className="bi bi-sliders me-2" />
                   Crear cuenta y calibrar mis gustos
-                </a>
+                </Link>
               </div>
             </div>
 

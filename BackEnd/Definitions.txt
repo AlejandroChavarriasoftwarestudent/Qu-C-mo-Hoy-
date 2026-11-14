@@ -1,0 +1,32 @@
+config	Configuraciones y conexión con MongoDB.
+models	Estructura de los datos.
+controllers	Lógica de las operaciones.
+routes	Direcciones de la API.
+middleware	Funciones que se ejecutan antes de ciertas solicitudes.
+
+
+Librería
+express	Construir el servidor y las rutas.
+mongoose	Comunicarse con MongoDB y gestionar modelos.
+dotenv	Leer variables del archivo .env.
+cors	Permitir la comunicación con React.
+nodemon	Reiniciar el servidor cuando modificamos el código.
+
+mongoose: permite trabajar con MongoDB.
+conectarDB: es una función que establece la conexión.
+async: permite realizar operaciones asíncronas.
+await: espera a que MongoDB responda.
+process.env.MONGODB_URL: obtiene la dirección de conexión desde nuestro archivo .env.
+try/catch: permite controlar errores de conexión.
+export default: permite utilizar esta función desde otros archivos.
+
+Alimentación
+POST /api/alimentos: registra { nombre, tipoComida, fecha, notas }.
+GET /api/alimentos/hoy?fecha=AAAA-MM-DD: consulta los alimentos de una fecha.
+GET /api/alimentos/historial: consulta el historial del usuario autenticado.
+PUT /api/alimentos/:id: edita un registro propio.
+DELETE /api/alimentos/:id: elimina un registro propio.
+Todas estas rutas requieren Authorization: Bearer <token>. Cada alimento guarda el usuarioId extraído del token.
+
+En React, src/services/api.js envía el token guardado en localStorage o sessionStorage.
+MongoDB sigue siendo la fuente de verdad para los registros de alimentación; localStorage conserva la sesión y los favoritos del navegador.

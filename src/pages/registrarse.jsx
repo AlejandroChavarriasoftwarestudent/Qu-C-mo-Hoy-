@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import '../CSS/registrarse.css'
+import { apiFetch, saveSession } from "../services/api.js";
 
 const RESTRICTIONS = [
   'Sin Gluten / Celíaco',
@@ -40,10 +41,12 @@ function Requirement({ valid, children }) {
 }
 
 export default function Registrarse() {
+  const navigate = useNavigate()
   const [values, setValues] = useState({
     firstName: '',
     lastName: '',
     email: '',
+    username: '',
     password: '',
     confirmPassword: '',
     initialGoal: 'allergy',
@@ -52,6 +55,7 @@ export default function Registrarse() {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [healthConsent, setHealthConsent] = useState(true)
   const [wasSubmitted, setWasSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState(null)
 
   const requirements = getPasswordRequirements(values.password)
@@ -79,7 +83,7 @@ export default function Registrarse() {
     setMessage(null)
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     setWasSubmitted(true)
 
@@ -93,10 +97,25 @@ export default function Registrarse() {
       return
     }
 
-    setMessage({
-      type: 'success',
-      text: '¡Formulario validado! El diseño está listo, pero para crear cuentas reales debes conectar este formulario con un backend o servicio de autenticación.',
-    })
+    setIsLoading(true)
+    try {
+      const data = await apiFetch('/api/usuarios/registro', {
+        method: 'POST',
+        body: JSON.stringify({
+          nombre: values.firstName,
+          apellido: values.lastName,
+          correo: values.email,
+          nombreUsuario: values.username,
+          password: values.password,
+        }),
+      })
+      saveSession(data)
+      navigate('/descubrir')
+    } catch (error) {
+      setMessage({ type: 'danger', text: error.message })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   function showSocialMessage(provider) {
@@ -394,6 +413,26 @@ export default function Registrarse() {
                   </div>
                 </div>
 
+                <div className="mb-3">
+                  <label className="form-label" htmlFor="username">
+                    Nombre de usuario
+                  </label>
+                  <input
+                    className="form-control"
+                    id="username"
+                    name="username"
+                    type="text"
+                    placeholder="elena.morales"
+                    autoComplete="username"
+                    required
+                    value={values.username}
+                    onChange={updateValue}
+                  />
+                  <div className="invalid-feedback">
+                    Elige un nombre de usuario.
+                  </div>
+                </div>
+
                 <div className="row g-3 mb-3">
                   <div className="col-12 col-sm-6">
                     <label className="form-label" htmlFor="password">
@@ -597,8 +636,8 @@ export default function Registrarse() {
                 )}
 
                 <div className="pt-2">
-                  <button className="btn btn-primary-custom w-100" type="submit">
-                    <span>Crear Cuenta y Comenzar Onboarding</span>
+                  <button className="btn btn-primary-custom w-100" type="submit" disabled={isLoading}>
+                    <span>{isLoading ? 'Creando cuenta…' : 'Crear Cuenta y Comenzar Onboarding'}</span>
                     <span className="material-symbols-outlined button-arrow">
                       arrow_forward
                     </span>

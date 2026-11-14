@@ -20,7 +20,7 @@ export default function Descubrir() {
             <Link to="/descubrir" className="logo">
                 <i className="bi bi-cup-hot-fill"></i>
                 <div>
-                    <b>NutriDecide</b>
+                    <b>NutriDecide</b> 
                     <small>Plan Consciente</small>
                 </div>
             </Link>
@@ -112,7 +112,7 @@ export default function Descubrir() {
                     </div>
 
                     <div className="col-md-3 text-center mt-3 mt-md-0">
-                        <a href="#" onClick={(e) => e.preventDefault()} className="btn boton-principal" onClick={sorprender}>
+                        <a href="#" className="btn boton-principal" onClick={sorprender}>
                             <i className="bi bi-dice-5-fill"></i> ¡Sorpréndeme!
                             <i className="bi bi-arrow-right"></i>
                         </a>

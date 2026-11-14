@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js'
 import '../CSS/Perfilclinico.css'
+import { clearSession, getCurrentUser } from '../services/api.js'
 
 const INITIAL_TAGS = [
   { id: 1, name: 'Mariscos crudos', icon: 'bi-water nd-text-secondary' },
@@ -34,6 +35,8 @@ const SYMPTOM_LEVELS = {
 }
 
 export default function PerfilClinico() {
+  const usuario = getCurrentUser()
+  const nombreUsuario = [usuario?.nombre, usuario?.apellido].filter(Boolean).join(' ') || 'Usuario'
   const [tags, setTags] = useState(INITIAL_TAGS)
   const [tagInput, setTagInput] = useState('')
   const [search, setSearch] = useState('')
@@ -111,9 +114,9 @@ export default function PerfilClinico() {
         </div>
 
         <div className="nd-miniprofile d-flex align-items-center gap-3 p-3">
-          <img className="nd-avatar-lg" alt="Valentina Ruiz" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASCMto98hM2Cp55yvpe08p-2sAI-ee5-lFIZGRi7QAcyrKguhLBAw5pVbKPhHt1ueyxQouprNeI8Ysic1NarGCqWTiuKdkNOt0Ow3oCVTHLsSDfErGfdD_TnVQAdr8va-PWAUqBr6IJrAIaC_B1FTPX9phY6zmugqZb3zGF7iEwYkTCRtTC9onk-wa-kdrrJMBuVi284f8JaTRaT_kNqy1UcdLS_h2uHDnkakUvf2wWELxhDsLN4BBZA" />
+          <img className="nd-avatar-lg" alt={nombreUsuario} src="https://lh3.googleusercontent.com/aida-public/AB6AXuASCMto98hM2Cp55yvpe08p-2sAI-ee5-lFIZGRi7QAcyrKguhLBAw5pVbKPhHt1ueyxQouprNeI8Ysic1NarGCqWTiuKdkNOt0Ow3oCVTHLsSDfErGfdD_TnVQAdr8va-PWAUqBr6IJrAIaC_B1FTPX9phY6zmugqZb3zGF7iEwYkTCRtTC9onk-wa-kdrrJMBuVi284f8JaTRaT_kNqy1UcdLS_h2uHDnkakUvf2wWELxhDsLN4BBZA" />
           <div className="min-w-0">
-            <p className="fw-bold mb-0 text-truncate">Valentina Ruiz</p>
+            <p className="fw-bold mb-0 text-truncate">{nombreUsuario}</p>
             <small className="nd-text-primary fw-semibold"><span className="nd-dot"></span> Libre de gluten</small>
           </div>
         </div>
@@ -153,7 +156,7 @@ export default function PerfilClinico() {
           className={`nd-nav text-danger${activeNavigation === 'Cerrar sesión' ? ' active' : ''}`}
           to="/"
           aria-current={activeNavigation === 'Cerrar sesión' ? 'page' : undefined}
-          onClick={(event) => handleNavigation(event, 'Cerrar sesión')}
+          onClick={clearSession}
         >
           <i className="bi bi-box-arrow-right" />
           Cerrar sesión
