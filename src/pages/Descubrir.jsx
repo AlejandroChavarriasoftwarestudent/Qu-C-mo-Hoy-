@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import CerrarSesion from '../components/CerrarSesion'
 import '../CSS/descubrir-react.css'
 
 const recetasSorpresa = ['Bowl Mediterráneo', 'Tacos saludables de pollo', 'Pasta cremosa de tomate']
@@ -44,6 +45,7 @@ export default function Descubrir() {
                 <i className="bi bi-bookmark"></i>
                 Favoritos e Historial
             </Link>
+            <CerrarSesion className="enlace-menu bg-transparent" />
         </div>
     <main className="contenido">
         <div className="barra-superior">
