@@ -1,7 +1,6 @@
-import { login, requestPasswordRecovery } from '@netlify/identity'
+import { iniciarSesion, guardarSesion } from '../services/api'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { authStatus } from '../data/auth'
 import '../CSS/login.css'
 
 const FOOD_IMAGE_URL =
@@ -35,30 +34,19 @@ export default function Inicio({ callbackError }) {
       return
     }
 
+    if (recovery) {
+      setFormAlert({ type: 'danger', text: 'La recuperación de contraseña aún no está disponible.' })
+      return
+    }
+
     setIsLoading(true)
     try {
-      if (recovery) {
-        await requestPasswordRecovery(email.trim())
-      } else {
-        await login(email.trim(), password)
-      }
+      const { token, usuario } = await iniciarSesion(email.trim(), password)
+      guardarSesion(token, usuario, true)
     } catch (error) {
-      const status = authStatus(error)
-      if (!recovery || ![400, 404, 422].includes(status)) {
-        const rejected = [400, 401, 403, 422].includes(status)
-        setFormAlert({
-          type: 'danger',
-          text: !recovery && rejected
-            ? 'No pudimos iniciar sesión. Revisa tu correo y contraseña y confirma tu cuenta desde el enlace que te enviamos.'
-            : 'No pudimos completar la solicitud. Inténtalo de nuevo en unos minutos.',
-        })
-        return
-      }
+      setFormAlert({ type: 'danger', text: error.message })
     } finally {
       setIsLoading(false)
-    }
-    if (recovery) {
-      setFormAlert({ type: 'success', text: 'Si existe una cuenta con este correo, recibirás un enlace para cambiar tu contraseña.' })
     }
   }
 

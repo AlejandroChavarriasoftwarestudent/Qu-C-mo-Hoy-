@@ -1,7 +1,6 @@
-import { signup } from '@netlify/identity'
+import { guardarSesion, registrarUsuario } from '../services/api'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { authStatus } from '../data/auth'
 import '../CSS/registrarse.css'
 
 function getPasswordRequirements(password) {
@@ -78,21 +77,16 @@ export default function Registrarse() {
     setIsLoading(true)
     setMessage(null)
     try {
-      const user = await signup(values.email.trim(), values.password, {
-        full_name: `${values.firstName.trim()} ${values.lastName.trim()}`,
+      const { token, usuario } = await registrarUsuario({
+        nombre: values.firstName.trim(),
+        apellido: values.lastName.trim(),
+        correo: values.email.trim(),
+        nombreUsuario: values.email.trim().split('@')[0],
+        password: values.password,
       })
-      if (!user.emailVerified) {
-        setValues((current) => ({ ...current, password: '', confirmPassword: '' }))
-        setWasSubmitted(false)
-        setConfirmationSent(true)
-      }
+      guardarSesion(token, usuario, true)
     } catch (error) {
-      setMessage({
-        type: 'danger',
-        text: [400, 422].includes(authStatus(error))
-          ? 'No se pudo crear la cuenta. Revisa tus datos o inicia sesión si ya tienes cuenta.'
-          : 'No se pudo completar el registro. Inténtalo de nuevo más tarde.',
-      })
+      setMessage({ type: 'danger', text: error.message })
     } finally {
       setIsLoading(false)
     }
