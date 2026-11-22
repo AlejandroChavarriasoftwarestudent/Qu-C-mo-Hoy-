@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import CerrarSesion from '../components/CerrarSesion'
 import '../assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js'
 import '../CSS/Perfilclinico.css'
 
@@ -149,15 +150,7 @@ export default function PerfilClinico() {
           <i className="bi bi-gear" />
           Ajustes
         </Link>
-        <Link
-          className={`nd-nav text-danger${activeNavigation === 'Cerrar sesión' ? ' active' : ''}`}
-          to="/"
-          aria-current={activeNavigation === 'Cerrar sesión' ? 'page' : undefined}
-          onClick={(event) => handleNavigation(event, 'Cerrar sesión')}
-        >
-          <i className="bi bi-box-arrow-right" />
-          Cerrar sesión
-        </Link>
+        <CerrarSesion className="nd-nav text-danger bg-transparent" />
       </div>
     </div>
   </aside>

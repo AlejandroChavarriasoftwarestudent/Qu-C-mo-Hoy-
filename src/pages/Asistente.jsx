@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import CerrarSesion from '../components/CerrarSesion'
 import '../CSS/asistente-react.css'
 
 // ---------- Datos (antes estaban repetidos a mano en el HTML) ----------
@@ -163,10 +164,7 @@ export default function Asistente() {
                         <i className="bi bi-gear"></i>
                         Ajustes
                     </Link>
-                    <Link to="/" className="enlace-menu">
-                        <i className="bi bi-box-arrow-right"></i>
-                        Cerrar Sesión
-                    </Link>
+                    <CerrarSesion className="enlace-menu bg-transparent" />
                 </div>
             </aside>
 

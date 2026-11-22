@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import CerrarSesion from './CerrarSesion'
 import '../assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js'
 import { AVATAR_GRANDE } from '../data/assets.js'
 import { PLATOS } from '../data/favoritos.js'
@@ -68,7 +69,7 @@ export default function Sidebar({ activo, insignia, sorpresaIcono, sorpresaTexto
             <i className={`bi ${sorpresaIcono} me-2`}></i>{sorpresaTexto}
           </button>
           <Link className="nd-nav" to="/configuracion" {...CIERRA_MENU}><i className="bi bi-gear" />Ajustes</Link>
-          <Link className="nd-nav text-danger" to="/" {...CIERRA_MENU}><i className="bi bi-box-arrow-right" />Cerrar sesión</Link>
+          <CerrarSesion className="nd-nav text-danger bg-transparent" />
         </div>
       </div>
     </aside>

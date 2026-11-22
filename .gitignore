@@ -28,3 +28,6 @@ node_modules/
 dist/
 build/
 .DS_Store
+
+.netlify/*
+!.netlify/features/

@@ -1,5 +1,11 @@
 # React + Vite
 
+## Acceso a QueComoHoy?
+
+El sitio usa Netlify Identity para registrar cuentas e iniciar sesión con correo y contraseña. Para comprobar el flujo en un despliegue de Netlify, crea una cuenta, abre el enlace de confirmación y verifica que se abra «Descubrir». Después, cierra sesión e intenta volver a abrir una ruta interna como `/favoritos`: debe pedirte que inicies sesión de nuevo.
+
+El registro guarda solo los datos de la cuenta. Las pantallas de planes y perfil incluyen datos de demostración; no se sincronizan con la cuenta.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

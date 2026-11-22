@@ -1,53 +1,34 @@
-import { useEffect, useRef, useState } from 'react'
+import { login, requestPasswordRecovery } from '@netlify/identity'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { authStatus } from '../data/auth'
 import '../CSS/login.css'
 
-const EMAIL_STORAGE_KEY = 'QueComoHoy:email'
 const FOOD_IMAGE_URL =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuCxto9fE84l3RN6VThmRG-kSTXldAPV0uZB708zs-lYeXc5qrhUQ5mGNL9tHOBHE2B_Ao5jgHszrUTm7iteSf4uFsWmrCgR-UBu3D_agBUTPccL1cZEfQfjRjLcOjDGcqEag5dkDE-EYEsbLyIPY8bQlQuVgiKbzBZXF0QHD1y7gijWnCpcNcirlacrtmMywbdqQuSdzPTUyniJqer9Jp72PzOI1pg11Sxt2MVKIIw2Dt3V9L_l107HdQ'
 
-function getSavedEmail() {
-  try {
-    return localStorage.getItem(EMAIL_STORAGE_KEY) ?? ''
-  } catch {
-    return ''
-  }
-}
-
-export default function Inicio() {
-  const [email, setEmail] = useState(getSavedEmail)
+export default function Inicio({ callbackError }) {
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [remember, setRemember] = useState(true)
+  const [recovery, setRecovery] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [wasValidated, setWasValidated] = useState(false)
-  const [formAlert, setFormAlert] = useState('')
-  const [socialToast, setSocialToast] = useState('')
-  const formRef = useRef(null)
-  const emailRef = useRef(null)
-  const rememberRef = useRef(null)
-  const submitTimeoutRef = useRef(null)
-  const toastTimeoutRef = useRef(null)
+  const [formAlert, setFormAlert] = useState(callbackError ? { type: 'danger', text: callbackError } : null)
 
-  useEffect(() => {
-    return () => {
-      window.clearTimeout(submitTimeoutRef.current)
-      window.clearTimeout(toastTimeoutRef.current)
-    }
-  }, [])
-
-  function handleSocialLogin(provider) {
-    setSocialToast(`El acceso con ${provider} aún no está conectado.`)
-    window.clearTimeout(toastTimeoutRef.current)
-    toastTimeoutRef.current = window.setTimeout(() => {
-      setSocialToast('')
-    }, 2500)
+  function toggleRecovery() {
+    setRecovery(!recovery)
+    setPassword('')
+    setFormAlert(null)
+    setWasValidated(false)
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    setFormAlert('')
+    if (isLoading) return
+    setFormAlert(null)
 
-    const form = formRef.current
+    const form = event.currentTarget
     if (!form.checkValidity()) {
       setWasValidated(true)
       form.querySelector(':invalid')?.focus()
@@ -55,20 +36,30 @@ export default function Inicio() {
     }
 
     setIsLoading(true)
-    submitTimeoutRef.current = window.setTimeout(() => {
-      try {
-        if (rememberRef.current.checked) {
-          localStorage.setItem(EMAIL_STORAGE_KEY, emailRef.current.value)
-        } else {
-          localStorage.removeItem(EMAIL_STORAGE_KEY)
-        }
-      } catch {
-        // El almacenamiento local puede no estar disponible en algunos navegadores.
+    try {
+      if (recovery) {
+        await requestPasswordRecovery(email.trim())
+      } else {
+        await login(email.trim(), password)
       }
-
+    } catch (error) {
+      const status = authStatus(error)
+      if (!recovery || ![400, 404, 422].includes(status)) {
+        const rejected = [400, 401, 403, 422].includes(status)
+        setFormAlert({
+          type: 'danger',
+          text: !recovery && rejected
+            ? 'No pudimos iniciar sesión. Revisa tu correo y contraseña y confirma tu cuenta desde el enlace que te enviamos.'
+            : 'No pudimos completar la solicitud. Inténtalo de nuevo en unos minutos.',
+        })
+        return
+      }
+    } finally {
       setIsLoading(false)
-      setFormAlert('Sesión iniciada. Cargando tu plan culinario…')
-    }, 1200)
+    }
+    if (recovery) {
+      setFormAlert({ type: 'success', text: 'Si existe una cuenta con este correo, recibirás un enlace para cambiar tu contraseña.' })
+    }
   }
 
   return (
@@ -92,10 +83,6 @@ export default function Inicio() {
             </span>
           </a>
           <div className="d-flex align-items-center gap-2">
-            <span className="sh-ssl d-none d-sm-inline-flex align-items-center gap-2">
-              <i className="bi bi-patch-check-fill" /> Acceso Médico Seguro
-              SSL-256
-            </span>
             <a
               href="#"
               className="btn btn-link sh-link text-decoration-none fw-semibold"
@@ -209,64 +196,12 @@ export default function Inicio() {
                   ¿Ayuda?
                 </a>
               </div>
-              <h2 className="sh-form-title mt-3">Bienvenido a tu mesa</h2>
+              <h2 className="sh-form-title mt-3">{recovery ? 'Recupera tu contraseña' : 'Bienvenido a tu mesa'}</h2>
               <p className="text-body-secondary small">
-                Ingresa tus credenciales para acceder a tus menús prescritos y
-                recomendaciones del día.
+                {recovery ? 'Ingresa el correo que usaste para registrarte.' : 'Ingresa con tu correo y contraseña para abrir tu plan culinario.'}
               </p>
 
-              <div className="row g-2 my-3">
-                <div className="col-6">
-                  <button
-                    type="button"
-                    className="btn sh-btn-social w-100"
-                    onClick={() => handleSocialLogin('Google')}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      className="me-2"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.9C6.2 7.2 8.9 5 12 5z"
-                        fill="#EA4335"
-                      />
-                      <path
-                        d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"
-                        fill="#4285F4"
-                      />
-                      <path
-                        d="M5.3 14.7c-.2-.7-.4-1.5-.4-2.4s.2-1.7.4-2.4L1.6 7c-.8 1.6-1.2 3.4-1.2 5.3s.4 3.7 1.2 5.3l3.7-2.9z"
-                        fill="#FBBC05"
-                      />
-                      <path
-                        d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.2-6.7-5.3L1.6 16C3.5 19.8 7.4 23 12 23z"
-                        fill="#34A853"
-                      />
-                    </svg>
-                    Google
-                  </button>
-                </div>
-                <div className="col-6">
-                  <button
-                    type="button"
-                    className="btn sh-btn-social w-100"
-                    onClick={() => handleSocialLogin('Apple ID')}
-                  >
-                    <i className="bi bi-apple me-2" />
-                    Apple ID
-                  </button>
-                </div>
-              </div>
-
-              <div className="sh-divider my-3">
-                <span>o con correo</span>
-              </div>
-
               <form
-                ref={formRef}
                 className={wasValidated ? 'was-validated' : ''}
                 noValidate
                 onSubmit={handleSubmit}
@@ -280,7 +215,6 @@ export default function Inicio() {
                       <i className="bi bi-envelope" />
                     </span>
                     <input
-                      ref={emailRef}
                       type="email"
                       className="form-control"
                       id="email"
@@ -297,7 +231,7 @@ export default function Inicio() {
                   </div>
                 </div>
 
-                <div className="mb-3">
+                {!recovery && <div className="mb-3">
                   <div className="d-flex justify-content-between align-items-center">
                     <label
                       htmlFor="password"
@@ -305,12 +239,14 @@ export default function Inicio() {
                     >
                       Contraseña
                     </label>
-                    <a
-                      href="#"
-                      className="sh-link small text-decoration-none"
+                    <button
+                      type="button"
+                      className="btn btn-link sh-link small text-decoration-none p-0"
+                      disabled={isLoading}
+                      onClick={toggleRecovery}
                     >
                       ¿Olvidaste tu contraseña?
-                    </a>
+                    </button>
                   </div>
                   <div className="input-group sh-input">
                     <span className="input-group-text">
@@ -323,7 +259,6 @@ export default function Inicio() {
                       name="password"
                       placeholder="••••••••••••"
                       required
-                      minLength={8}
                       autoComplete="current-password"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
@@ -343,34 +278,17 @@ export default function Inicio() {
                       />
                     </button>
                     <div className="invalid-feedback">
-                      La contraseña debe tener al menos 8 caracteres.
+                      Ingresa tu contraseña.
                     </div>
                   </div>
-                </div>
-
-                <div className="form-check mb-3">
-                  <input
-                    ref={rememberRef}
-                    className="form-check-input sh-check"
-                    type="checkbox"
-                    id="remember"
-                    checked={remember}
-                    onChange={(event) => setRemember(event.target.checked)}
-                  />
-                  <label
-                    className="form-check-label small text-body-secondary"
-                    htmlFor="remember"
-                  >
-                    Recordar sesión en este equipo
-                  </label>
-                </div>
+                </div>}
 
                 {formAlert && (
                   <div
-                    className="alert alert-success py-2 small"
-                    role="status"
+                    className={`alert alert-${formAlert.type} py-2 small`}
+                    role={formAlert.type === 'danger' ? 'alert' : 'status'}
                   >
-                    {formAlert}
+                    {formAlert.text}
                   </div>
                 )}
 
@@ -384,14 +302,18 @@ export default function Inicio() {
                     aria-hidden="true"
                   />
                   <span className="btn-text">
-                    {isLoading
-                      ? 'Ingresando…'
-                      : 'Ingresar a mi plan culinario'}
+                    {isLoading ? 'Procesando…' : recovery ? 'Enviar enlace' : 'Ingresar a mi plan culinario'}
                   </span>
                   <i
                     className={`bi bi-arrow-right ms-2 btn-arrow${isLoading ? ' d-none' : ''}`}
+                    aria-hidden="true"
                   />
                 </button>
+                {recovery && (
+                  <button type="button" className="btn btn-link sh-link w-100 mt-2" disabled={isLoading} onClick={toggleRecovery}>
+                    Volver a iniciar sesión
+                  </button>
+                )}
               </form>
 
               <div className="sh-register mt-4 text-center">
@@ -402,10 +324,10 @@ export default function Inicio() {
                   Crea tu cuenta gratis para calibrar tus alergias,
                   restricciones clínicas y presupuestos culinarios.
                 </p>
-                <a href="#" className="btn sh-btn-outline w-100">
-                  <i className="bi bi-sliders me-2" />
+                <Link to="/registrarse" className="btn sh-btn-outline w-100">
+                  <i className="bi bi-sliders me-2" aria-hidden="true" />
                   Crear cuenta y calibrar mis gustos
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -414,10 +336,7 @@ export default function Inicio() {
                 <i className="bi bi-shield-fill-check" />
               </span>
               <p className="small text-body-secondary mb-0">
-                <strong className="text-body">Privacidad garantizada:</strong>{' '}
-                tus datos clínicos, biomarcadores y alergias están protegidos
-                con cifrado de grado médico compatible con normativas HIPAA /
-                GDPR.
+                Confirma tu correo para activar una cuenta nueva.
               </p>
             </div>
           </section>
@@ -444,16 +363,6 @@ export default function Inicio() {
         </div>
       </footer>
 
-      <div className="toast-container position-fixed bottom-0 end-0 p-3">
-        <div
-          className={`toast sh-toast${socialToast ? ' show' : ''}`}
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <div className="toast-body">{socialToast}</div>
-        </div>
-      </div>
     </div>
   )
 }
